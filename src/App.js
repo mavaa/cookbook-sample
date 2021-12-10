@@ -19,19 +19,26 @@ function App() {
     const [error, setError] = useState(null);
     const [selectedIndex, setSelectedIndex] = useState(0);
 
+    function handleException(error) {
+        console.log(error);
+        setError(error);
+        setLoadingDone(true);
+    }
+
     useEffect(() => {
         fetch(recipeUrl)
-            .then(res => res.json())
+            .then(res => {
+                console.log(res);
+                if(res.status === 200) {
+                    return res.json()
+                }
+                throw new Error("Fetch error " + res.status + ": " + res.text());
+            }, handleException)
             .then(
                 (result) => {
                     setRecipes(result);
                     setLoadingDone(true);
-                },
-                (error) => {
-                    setError(error);
-                    setLoadingDone(true);
-                }
-            );
+                }, handleException);
     }, []);
 
     const menuItems = recipes.map((recipe, index) =>
@@ -48,7 +55,11 @@ function App() {
     if (error) {
         appContent =
             <Alert variant="danger">
-                {error}
+                {recipeUrl}
+                <br/>
+                {error.message}
+                <br/>
+                {error.stack}
             </Alert>;
     }
     else if (loadingDone) {
